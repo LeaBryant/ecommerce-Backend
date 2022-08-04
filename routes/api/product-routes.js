@@ -7,18 +7,39 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 router.get('/', (req, res) => {
   // find all products
   Product.findAll({
-    include: [Category, { model: Tag, through: ProductTag }],
-  }).then((response) => res.json(response))
+    include: [
+      {model: Category},
+      {model: Tag}
+    ]
+  })
   // be sure to include its associated Category and Tag data
+  .then(productData => {
+    res.json(productData)
+  })
+  .catch(err => {
+    res.json(err)
+  })
 });
 
 // get one product
 router.get('/:id', (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
-  Product.findOne(req.params.id,{
-      include: [Category, { model: Tag, through: ProductTag }],
-    }).then((response) => res.json(response))
+  Product.findOne({
+    where: {
+      id: req.params.id
+    },
+    include: [
+      {model: Category},
+      {model: Tag}
+    ]
+  })
+  .then(productData => {
+    res.json(productData)
+  })
+  .catch(err => {
+    res.json(err)
+  })
 });
 
 // create new product
@@ -31,12 +52,7 @@ router.post('/', (req, res) => {
       tagIds: [1, 2, 3, 4]
     }
   */
-  Product.create(req.body)({
-    product_name: req.body.product_name,
-    price: req.body.price,
-    stock: req.body.stock,
-    tagIds: req.body.tagIds,
-  })
+  Product.create(req.body)
     .then((product) => {
       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
       if (req.body.tagIds.length) {
@@ -107,11 +123,11 @@ router.delete('/:id', (req, res) => {
       id: req.params.id,
     },
   }).then((product) => {
-    res.json({ message: "Product " + req.params.id + " has been deleted." });
-    if (!product) {
-      res.status(404).json({ message: "No category found!" });
-    }
+    res.json(product)
+   })
+   .catch(err => {
+    res.json(err)
+  })
   });
-});
 
 module.exports = router;
