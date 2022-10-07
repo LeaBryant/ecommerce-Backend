@@ -1,80 +1,98 @@
-const router = require('express').Router();
-const { Category, Product } = require('../../models');
+const router = require("express").Router();
+const { Category, Product } = require("../../models");
 
 // The `/api/categories` endpoint
-
-router.get('/', async (req, res) => {
-  try {
-    // finds all categories
-    const categoryData = await Category.findAll({
-      // includes its associated Products
-      include: [{ model: Product }],
-    });
-    res.status(200).json(categoryData);
-    } catch (err) {
+// find all categories
+// be sure to include its associated Products
+router.get("/", (req, res) => {
+  Category.findAll({
+    include: [Product],
+  })
+    .then((categoryResData) => {
+      if (!categoryResData) {
+        res.status(404).json({ message: "No categories found." });
+        return;
+      }
+      res.json(categoryResData);
+    })
+    .catch((err) => {
+      console.log(err);
       res.status(500).json(err);
-  }
-});
-
-router.get('/:id', async (req, res) => {
-  // finds one category by its `id` value
-  try {
-    // includes its associated Products
-    const categoryData = await Category.findByPk(req.params.id,{
-      include: [{ model: Product }],
     });
-
-    if (!categoryData) {
-      res.status(404).json({ message: "No category found" });
-      return;
-    }
-
-    res.status(200).json(categoryData);
-    } catch (err) {
-    res.status(500).json(err);
-  }
 });
 
-router.post('/', async (req, res) => {
-  try {
-    // create a new category
-    const categoryData = await Category.create(req.body);
-    res.status(200).json({ message: "Category successfully created!"});
-  } catch (err) {
-    res.status(400).json({ message: "Error creating category."});
-  }
+// find one category by its `id` value
+// be sure to include its associated Products
+router.get("/:id", (req, res) => {
+  Category.findOne({
+    where: {
+      id: req.params.id,
+    },
+    include: [Product],
+  })
+    .then((categoryResData) => {
+      if (!categoryResData) {
+        res.status(404).json({ message: "No category found with that id." });
+        return;
+      }
+      res.json(categoryResData);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
-router.put('/:id', async (req, res) => {
-  try {
-    // update a category by its `id` value
-    const categoryData = await Category.update(req.body, {
+// create a new category
+router.post("/", (req, res) => {
+  Category.create({
+    category_name: req.body.category_name,
+  })
+    .then((categoryPostData) => res.json(categoryPostData))
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json(err);
+    });
+});
+
+// update a category by its `id` value
+router.put("/:id", (req, res) => {
+  Category.update(
+    {
+      category_name: req.body.category_name,
+    },
+    {
       where: {
         id: req.params.id,
       },
-    });
-    res.status(200).json({ message: "Your category has been updated!" });
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
-
-router.delete('/:id', async (req, res) => {
-  try {
-    // delete a category by its `id` value
-    const categoryData = await Category.destroy( {
-      where: {
-        id: req.params.id,
-      },
-    });
-    if (!categoryData) {
-      res.status(404).json({ message: "No category with this id!" });
+    }
+  ).then((categoryPostData) => {
+    if (!categoryPostData) {
+      res.status(404).json({ message: "No category with that id found." });
       return;
     }
-    res.status(200).json({ message: "Category has been deleted!"});
-  } catch (err) {
-    res.status(500).json(err);
-  }
+    res.json(categoryPostData);
+  });
+});
+
+// delete a category by its `id` value
+router.delete("/:id", (req, res) => {
+  Category.destroy({
+    where: {
+      id: req.params.id,
+    },
+  })
+    .then((categoryPostData) => {
+      if (!categoryPostData) {
+        res.status(404).json({ message: "No category with that id found." });
+        return;
+      }
+      res.json(categoryPostData);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 module.exports = router;
