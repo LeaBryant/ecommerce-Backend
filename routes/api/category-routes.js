@@ -4,92 +4,101 @@ const { Category, Product } = require("../../models");
 // The `/api/categories` endpoint
 // find all categories
 // be sure to include its associated Products
-router.get("/", (req, res) => {
+router.get('/', (req, res) => {
+  // find all categories and include its associated Products
   Category.findAll({
-    include: [Product],
+        include: [
+          {
+            model: Product,
+            attributes: ['id', 'product_name', 'price','stock']
+          }
+        ]
   })
-    .then((categoryResData) => {
-      if (!categoryResData) {
-        res.status(404).json({ message: "No categories found." });
-        return;
-      }
-      res.json(categoryResData);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json(err);
-    });
+  .then(category => res.json(category))
+  .catch(err => {
+    console.log(err);
+    res.status(500).json(err);
+  })
 });
 
-// find one category by its `id` value
-// be sure to include its associated Products
-router.get("/:id", (req, res) => {
+router.get('/:id', (req, res) => {
+  // find one category by its `id` value and include its associated Products
   Category.findOne({
     where: {
-      id: req.params.id,
-    },
-    include: [Product],
-  })
-    .then((categoryResData) => {
-      if (!categoryResData) {
-        res.status(404).json({ message: "No category found with that id." });
-        return;
+      id: req.params.id
+  },
+    attributes: ['id', 'category_name'],
+    include: [
+      {
+        model: Product,
+        attributes: ['id', 'product_name', 'price', 'stock']
       }
-      res.json(categoryResData);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json(err);
-    });
-});
-
-// create a new category
-router.post("/", (req, res) => {
-  Category.create({
-    category_name: req.body.category_name,
+    ]
   })
-    .then((categoryPostData) => res.json(categoryPostData))
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json(err);
-    });
-});
-
-// update a category by its `id` value
-router.put("/:id", (req, res) => {
-  Category.update(
-    {
-      category_name: req.body.category_name,
-    },
-    {
-      where: {
-        id: req.params.id,
-      },
-    }
-  ).then((categoryPostData) => {
-    if (!categoryPostData) {
-      res.status(404).json({ message: "No category with that id found." });
+  .then(category => {
+    if (!category) {
+      res.status(404).json({ message: 'Category not found!'});
       return;
     }
-    res.json(categoryPostData);
+    res.json(category);
+  })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
   });
 });
 
-// delete a category by its `id` value
-router.delete("/:id", (req, res) => {
+router.post('/', (req, res) => {
+  // create a new category
+  Category.create({
+    id: req.body.id,
+    category_name: req.body.category_name
+  })
+  .then(category => res.json(category))
+  .catch(err => {
+    console.log(err);
+    res.status(500).json(err);
+  });
+});
+
+router.put('/:id', (req, res) => {
+  // update a category by its `id` value
+  Category.update(
+    {
+      category_name: req.body.category_name
+    },
+    {
+    where: {
+      id: req.params.id
+    }
+  })
+  .then(category => {
+    if (!category[0]){
+      res.status(400).json({ message: 'Category does not exist'});
+      return;
+    }
+    res.json(category);
+  })
+  .catch(err => {
+    console.log(err);
+    res.status(500).json(err);
+  });
+});
+
+router.delete('/:id', (req, res) => {
   Category.destroy({
     where: {
-      id: req.params.id,
+      id: req.params.id
     },
   })
-    .then((categoryPostData) => {
-      if (!categoryPostData) {
-        res.status(404).json({ message: "No category with that id found." });
+    .then(category => {
+      if (!category) {
+        res.status(404).json({ message: 'Category does not exist'});
         return;
       }
-      res.json(categoryPostData);
+      res.json(category);
     })
-    .catch((err) => {
+    .catch(err => {
       console.log(err);
       res.status(500).json(err);
     });
